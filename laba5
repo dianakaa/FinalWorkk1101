@@ -1,0 +1,123 @@
+#include <iostream>
+
+using namespace std;
+
+void task1() {
+    double R, r, S;
+    double pi = 3.14159265358979323846;
+
+    cout << "Введите радиус внешней окружности (R): ";
+    cin >> R;
+    cout << "Введите радиус внутренней окружности (r): ";
+    cin >> r;
+
+    if (R <= 0 || r <= 0 || r >= R) {
+        cerr << "Некорректные данные." << endl;
+        return;
+    }
+
+    __asm {
+        fld qword ptr[R]  // загрузить R в стек
+        fmul st(0), st(0) // R^2
+        fld qword ptr[r]  // загрузить r в стек
+        fmul st(0), st(0) // r^2
+        fsubp st(1), st(0) // R^2 - r^2
+        fld qword ptr[pi] // загрузить π в стек
+        fmulp st(1), st(0) // π * (R^2 - r^2)
+        fstp qword ptr[S] // сохранить результат в areaRing
+    }
+
+    cout << "Площадь кольца: " << S << endl;
+}
+
+void task2() {
+    double x;
+    double three = 3.0;
+    double four = 4.0;
+    double result;
+
+    cout << "Введите значение x: ";
+    cin >> x;
+
+    __asm {
+        fld x           // Загрузка x
+        fld x           // Загрузка x
+        fmul            // x * x
+        fld x           // Загрузка x
+        fld three // Загрузка three_value
+        fmul            // 3 * x
+        faddp st(1), st(0)   // x^2 + 3x (используем faddp для сложения и удаления верхнего значения из стека)
+        fld four  // Загрузка four_value
+        fsubp st(1), st(0) // x^2 + 3x - 4 (используем fsubp для вычитания и удаления верхнего значения из стека)
+        fstp result       // Сохранение результата в result
+    }
+
+    cout << "f(x) = " << result << endl;
+}
+
+void task3() {
+    double x1, x2;
+    double three = 3.0;
+    double four = 4.0;
+    double result;
+
+    cout << "Введите начало промежутка (x1): ";
+    cin >> x1;
+    cout << "Введите конец промежутка (x2): ";
+    cin >> x2;
+
+    if (x1 > x2) {
+        cerr << "Некорректные данные." << endl;
+        return;
+    }
+
+    for (double x = x1; x <= x2; x += 1.0) {
+
+        __asm {
+            fld x           // Загрузка x
+            fld x           // Загрузка x
+            fmul            // x * x
+            fld x           // Загрузка x
+            fld three // Загрузка three_value
+            fmul            // 3 * x
+            faddp st(1), st(0)   // x^2 + 3x (используем faddp для сложения и удаления верхнего значения из стека)
+            fld four  // Загрузка four_value
+            fsubp st(1), st(0) // x^2 + 3x - 4 (используем fsubp для вычитания и удаления верхнего значения из стека)
+            fstp result       // Сохранение результата в result
+        }
+
+        cout << "f(" << x << ") = " << result << endl;
+    }
+}
+
+int main() {
+
+    setlocale(LC_ALL, "");
+    int choice;
+
+    while (true) {
+        cout << "1. Вычислить площадь кольца" << endl;
+        cout << "2. Вычислить f(x) = x^2 + 3x - 4" << endl;
+        cout << "3. Вычислить f(x) для промежутка [x1, x2]" << endl;
+        cout << "4. Выход" << endl;
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            task1();
+            break;
+        case 2:
+            task2();
+            break;
+        case 3:
+            task3();
+            break;
+        case 4:
+            return 0;
+        default:
+            cerr << "Некорректный выбор." << endl;
+        }
+    }
+
+    return 0;
+}
