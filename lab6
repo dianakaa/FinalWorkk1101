@@ -1,0 +1,119 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// Функция для копирования строки
+void copyString(const string& src, string& dst) {
+    __asm {
+        mov eax, offset src // Адрес источника
+        mov ebx, offset dst // Адрес приемника
+        mov ecx, src.size() // Длина строки
+        cld // Флаг направления
+        rep movsb // Копирование строки
+    }
+}
+
+// Функция для копирования массива
+void copyArray(int src[], int dst[], int len) {
+    __asm {
+        mov esi, offset src // Адрес источника
+        mov edi, offset dst // Адрес приемника
+        mov ecx, len // Количество элементов
+        cld // Флаг направления
+        rep movsl // Копирование массива
+    }
+}
+
+// Функция для копирования подстроки
+void copySubstring(const string& src, string& dst, int start, int len) {
+    dst.resize(len); // Установка размера строки-получателя
+
+    __asm {
+        mov eax, offset src // Адрес источника
+        add eax, start // Смещение к началу подстроки
+        mov ebx, offset dst // Адрес приемника
+        mov ecx, len // Длина подстроки
+        cld // Флаг направления
+        rep movsb // Копирование подстроки
+    }
+}
+
+// Функция для поиска символа в строке
+int findSymbol(const string& str, char symbol) {
+    int pos = -1;
+
+    __asm {
+        mov eax, offset str // Адрес строки
+        mov ecx, str.size() // Длина строки
+        mov al, symbol // Символ для поиска
+        xor ebx, ebx // Счетчик позиции
+        cld // Флаг направления
+        repne scasb // Поиск символа
+        jnz exit // Если символ не найден
+        dec ebx // Коррекция позиции
+        mov pos, ebx // Сохранение позиции
+        exit:
+    }
+
+    return pos;
+}
+
+// Функция для поиска количества совпадений в массиве
+int findMatches(int arr[], int target, int len) {
+    int count = 0;
+
+    __asm {
+        mov eax, offset arr // Адрес массива
+        mov ecx, len // Количество элементов
+        mov ebx, target // Значение для поиска
+        xor edx, edx // Счетчик совпадений
+        cld // Флаг направления
+        loop_start:
+            cmp [eax], ebx // Сравнение элемента с целевым значением
+            jne next // Если не совпадает
+            inc edx // Увеличение счетчика совпадений
+            next:
+            add eax, 4 // Переход к следующему элементу
+            loop loop_start // Повтор для всех элементов
+        mov count, edx // Сохранение количества совпадений
+    }
+
+    return count;
+}
+
+int main() {
+    // Копирование строки
+    string srcStr = "Hello";
+    string dstStr(srcStr.size(), '\0');
+    copyString(srcStr, dstStr);
+    cout << "Копированная строка: " << dstStr << endl;
+
+    // Копирование массива
+    int srcArr[] = {1, 2, 3, 4, 5};
+    int dstArr[5];
+    copyArray(srcArr, dstArr, sizeof(srcArr) / sizeof(srcArr[0]));
+    cout << "Копированный массив: ";
+    for (int i = 0; i < sizeof(srcArr) / sizeof(srcArr[0]); ++i) {
+        cout << dstArr[i] << " ";
+    }
+    cout << endl;
+
+    // Копирование подстроки
+    string srcSubstr = "Hello, World!";
+    string dstSubstr;
+    copySubstring(srcSubstr, dstSubstr, 7, 5);
+    cout << "Копированная подстрока: " << dstSubstr << endl;
+
+    // Поиск символа в строке
+    char symbol = 'l';
+    int pos = findSymbol(srcStr, symbol);
+    cout << "Позиция символа '" << symbol << "': " << pos << endl;
+
+    // Поиск количества совпадений в массиве
+    int target = 2;
+    int matches = findMatches(srcArr, target, sizeof(srcArr) / sizeof(srcArr[0]));
+    cout << "Количество совпадений с " << target << ": " << matches << endl;
+
+    return 0;
+}
